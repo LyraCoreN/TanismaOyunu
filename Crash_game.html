@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crash Cafe — Kayra & Nur (VN + Telefon)</title>
+
+<style>
+  :root{
+    --pink:#ff4da6;
+    --green:#22c55e;
+    --amber:#f59e0b;
+
+    --phoneW:390px;
+    --phoneH:720px;
+
+    --card: rgba(255,255,255,.10);
+    --stroke: rgba(255,255,255,.18);
+  }
+
+  body,html{
+    margin:0; padding:0; height:100%;
+    font-family: Arial, sans-serif;
+    background:#000;
+  }
+
+  /* =============== VISUAL NOVEL (YÜZ YÜZE) =============== */
+  #vn{
+    position:fixed; inset:0;
+    background:url("scene1.png") center/cover no-repeat;
+    display:flex;
+    align-items:flex-end;
+  }
+
+  #vnHud{
+    width:min(980px, 100%);
+    margin:0 auto;
+    padding:18px 18px 22px;
+    box-sizing:border-box;
+  }
+
+  #vnBox{
+    background:rgba(0,0,0,.78);
+    color:#fff;
+    border-radius:14px;
+    padding:14px 14px 12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    backdrop-filter: blur(2px);
+  }
+
+  #vnNameRow{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px;
+    margin-bottom:6px;
+  }
+
+  #vnSpeaker{
+    font-weight:700;
+    letter-spacing:.2px;
+    font-size:15px;
+  }
+
+  #vnStageTag{
+    font-size:12px;
+    opacity:.75;
+    white-space:nowrap;
+  }
+
+  #vnText{
+    font-size:16px;
+    line-height:1.45;
+    min-height:58px;
+    white-space:pre-line;
+  }
+
+  #vnChoices{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .vnChoice{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    padding:10px 12px;
+    border-radius:12px;
+    cursor:pointer;
+    transition:.15s;
+    text-align:left;
+    font-size:14px;
+  }
+  .vnChoice:hover{
+    transform: translateY(-1px);
+    background:rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.25);
+  }
+
+  /* =============== PHONE WRAP =============== */
+  #phoneWrap{
+    position:fixed; inset:0;
+    display:none;
+    background:
+      radial-gradient(1200px 800px at 70% 10%, rgba(255,255,255,.08), transparent 55%),
+      radial-gradient(1000px 700px at 20% 90%, rgba(255,255,255,.06), transparent 55%),
+      linear-gradient(135deg, #0b0b14, #121228);
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    box-sizing:border-box;
+    gap:16px;
+  }
+
+  /* Phone */
+  #phone{
+    width:var(--phoneW);
+    height:var(--phoneH);
+    background:rgba(255,255,255,.96);
+    border-radius:26px;
+    box-shadow:0 25px 80px rgba(0,0,0,.55);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Stats panel */
+  #statsPanel{
+    width:min(320px, 40vw);
+    height:var(--phoneH);
+    max-height:92vh;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .statCard{
+    background: var(--card);
+    border:1px solid var(--stroke);
+    border-radius:18px;
+    padding:14px;
+    color:#fff;
+    box-shadow:0 20px 70px rgba(0,0,0,.35);
+    backdrop-filter: blur(6px);
+  }
+
+  .statTitle{
+    font-weight:800;
+    letter-spacing:.2px;
+    font-size:14px;
+    opacity:.95;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .pill{
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.08);
+    opacity:.95;
+    white-space:nowrap;
+  }
+
+  .statRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:10px 0 6px;
+  }
+
+  .statLabel{
+    font-weight:700;
+    font-size:13px;
+    opacity:.95;
+  }
+
+  .statVal{
+    font-weight:900;
+    font-size:14px;
+  }
+
+  .barOuter{
+    height:10px;
+    background:rgba(255,255,255,.12);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .bar{
+    height:100%;
+    width:50%;
+    border-radius:999px;
+    transition:.25s;
+  }
+  .bar.trust{ background:linear-gradient(90deg, #22c55e, #a7f3d0); }
+  .bar.love{ background:linear-gradient(90deg, #ff4da6, #ffd6e7); }
+  .bar.jeal{ background:linear-gradient(90deg, #f59e0b, #fde68a); }
+
+  #deltaLog{
+    font-size:12px;
+    line-height:1.35;
+    opacity:.95;
+    white-space:pre-line;
+    min-height:52px;
+  }
+
+  #tinyHint{
+    font-size:12px;
+    opacity:.75;
+    margin-top:10px;
+  }
+
+  /* Header inside phone */
+  #pHeader{
+    background:linear-gradient(135deg, #0b5, #0a7a6a);
+    color:#fff;
+    padding:14px 14px 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  #pAvatar{
+    width:44px; height:44px; border-radius:50%;
+    background:linear-gradient(135deg,#ffd6e7,#c7d2fe,#bae6fd);
+    position:relative;
+    flex:0 0 auto;
+  }
+  #pOnlineDot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--green);
+    border:2px solid #fff;
+    position:absolute; right:2px; bottom:2px;
+  }
+
+  #pTitle{
+    display:flex; flex-direction:column;
+    min-width:0;
+    flex:1 1 auto;
+  }
+  #pName{
+    font-weight:800;
+    font-size:15px;
+    line-height:1.1;
+  }
+  #pStatus{
+    font-size:12px;
+    opacity:.85;
+  }
+
+  #pBtns{
+    display:flex; gap:8px; align-items:center;
+  }
+
+  .pBtn{
+    background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.22);
+    color:#fff;
+    border-radius:12px;
+    padding:8px 10px;
+    font-size:12px;
+    cursor:pointer;
+    transition:.15s;
+    white-space:nowrap;
+  }
+  .pBtn:hover{ background:rgba(255,255,255,.22); }
+
+  /* Cute wallpaper for chat */
+  #chat{
+    flex:1 1 auto;
+    padding:12px 10px 16px;
+    overflow:auto;
+
+    background:
+      radial-gradient(900px 700px at 40% 0%, rgba(255,77,166,.12), transparent 55%),
+      radial-gradient(900px 700px at 70% 90%, rgba(99,102,241,.10), transparent 60%),
+      radial-gradient(900px 700px at 10% 70%, rgba(34,197,94,.08), transparent 60%),
+      linear-gradient(180deg, #f7f3ff, #f7fbff);
+
+    position:relative;
+  }
+  #chat::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 12px 12px, rgba(255,255,255,.55) 0 2px, transparent 3px) 0 0/24px 24px,
+      radial-gradient(circle at 18px 18px, rgba(255,77,166,.12) 0 2px, transparent 3px) 0 0/36px 36px;
+    opacity:.7;
+    pointer-events:none;
+  }
+  #chat > *{ position:relative; }
+
+  .dayChip{
+    margin:10px auto 12px;
+    width:max-content;
+    background:rgba(0,0,0,.08);
+    color:rgba(0,0,0,.65);
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+  }
+
+  .msg{
+    max-width:76%;
+    padding:10px 10px 16px;
+    border-radius:14px;
+    margin:8px 0 14px;
+    position:relative;
+    animation:fadeIn .18s ease;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);
+    white-space:pre-line;
+  }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .msg.kayra{
+    background:#fff;
+    color:#111;
+    border-top-left-radius:8px;
+  }
+  .msg.nur{
+    background:linear-gradient(135deg, #ff4da6, #ff6bb7);
+    color:#fff;
+    margin-left:auto;
+    border-top-right-radius:8px;
+  }
+
+  .time{
+    position:absolute;
+    right:10px;
+    bottom:6px;
+    font-size:10px;
+    opacity:.65;
+  }
+
+  .typing{
+    font-style:italic;
+    opacity:.75;
+    animation:blink 1s infinite;
+  }
+  @keyframes blink{ 0%{opacity:.35;} 50%{opacity:1;} 100%{opacity:.35;} }
+
+  #choices{
+    padding:10px;
+    background:#fff;
+    border-top:1px solid rgba(0,0,0,.08);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .choiceBtn{
+    background:#111827;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:12px 12px;
+    cursor:pointer;
+    font-size:14px;
+    text-align:left;
+    transition:.15s;
+  }
+  .choiceBtn:hover{
+    background:var(--pink);
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 920px){
+    #phoneWrap{ flex-direction:column; }
+    #statsPanel{ width:min(420px, 92vw); height:auto; }
+    #phone{ height:min(var(--phoneH), 78vh); }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ================= VN (YÜZ YÜZE) ================= -->
+<div id="vn">
+  <div id="vnHud">
+    <div id="vnBox">
+      <div id="vnNameRow">
+        <div id="vnSpeaker">Kayra</div>
+        <div id="vnStageTag">Crash Cafe • Akşam</div>
+      </div>
+      <div id="vnText"></div>
+      <div id="vnChoices"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PHONE (MESAJ) ================= -->
+<div id="phoneWrap">
+  <div id="phone">
+    <div id="pHeader">
+      <div id="pAvatar"><div id="pOnlineDot"></div></div>
+
+      <div id="pTitle">
+        <div id="pName">Kayra</div>
+        <div id="pStatus">çevrimiçi</div>
+      </div>
+
+      <div id="pBtns">
+        <button class="pBtn" onclick="saveGame()">💾</button>
+        <button class="pBtn" onclick="loadGame()">▶</button>
+        <button class="pBtn" onclick="resetGame()">↺</button>
+      </div>
+    </div>
+
+    <div id="chat"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- Stats Panel -->
+  <div id="statsPanel">
+    <div class="statCard">
+      <div class="statTitle">
+        <span>📊 İlişki Paneli</span>
+        <span class="pill" id="moodPill">Crash vibes</span>
+      </div>
+
+      <div class="statRow">
+        <span class="statLabel">Trust</span>
+        <span class="statVal" id="trustVal">50</span>
+      </div>
+      <div class="barOuter"><div class="bar trust" id="trustBar"></div></div>
+
+      <div class="statRow">
+        <span class="statLabel">Love</span>
+        <span class="statVal" id="loveVal">40</span>
+      </div>
+      <div class="barOuter"><div class="bar love" id="loveBar"></div></div>
+
+      <div class="statRow">
+        <span class="statLabel">Jealousy</span>
+        <span class="statVal" id="jealVal">0</span>
+      </div>
+      <div class="barOuter"><div class="bar jeal" id="jealBar"></div></div>
+
+      <div id="tinyHint">Her seçimden sonra artı/eksi + toplamlar burada güncellenir 😌</div>
+    </div>
+
+    <div class="statCard">
+      <div class="statTitle">
+        <span>✨ Son Değişim</span>
+        <span class="pill" id="lastDeltaPill">—</span>
+      </div>
+      <div id="deltaLog">Henüz seçim yok.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== HELPERS ================== */
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function fmtHM(mins){
+  const h = Math.floor(mins/60)%24;
+  const m = mins%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+/* ================== GLOBAL STATE ================== */
+let trust=50;
+let jealousy=0;
+let love=40;
+
+let vnStep=0;
+let phoneStep=0;
+let lastDayChip=null;
+
+const vnEl = document.getElementById("vn");
+const phoneWrap = document.getElementById("phoneWrap");
+
+const vnSpeakerEl = document.getElementById("vnSpeaker");
+const vnTextEl = document.getElementById("vnText");
+const vnChoicesEl = document.getElementById("vnChoices");
+
+const chatEl = document.getElementById("chat");
+const choicesEl = document.getElementById("choices");
+const statusEl = document.getElementById("pStatus");
+
+/* Stats UI */
+const trustValEl = document.getElementById("trustVal");
+const loveValEl  = document.getElementById("loveVal");
+const jealValEl  = document.getElementById("jealVal");
+const trustBarEl = document.getElementById("trustBar");
+const loveBarEl  = document.getElementById("loveBar");
+const jealBarEl  = document.getElementById("jealBar");
+
+const deltaLogEl = document.getElementById("deltaLog");
+const lastDeltaPillEl = document.getElementById("lastDeltaPill");
+const moodPillEl = document.getElementById("moodPill");
+
+/* ================== STATS ================== */
+function updateStatsUI(){
+  trustValEl.textContent = trust;
+  loveValEl.textContent  = love;
+  jealValEl.textContent  = jealousy;
+
+  trustBarEl.style.width = trust + "%";
+  loveBarEl.style.width  = love + "%";
+  jealBarEl.style.width  = clamp(jealousy,0,100) + "%";
+
+  if(trust >= 80 && jealousy <= 5) moodPillEl.textContent = "💗 soft & safe";
+  else if(jealousy >= 12) moodPillEl.textContent = "😶‍🌫️ drama loading";
+  else if(trust < 45) moodPillEl.textContent = "🧊 mesafe";
+  else moodPillEl.textContent = "☕ tatlı akış";
+}
+
+function renderDeltaLog(dt, dl, dj){
+  const f = (n)=> (n>=0?`+${n}`:`${n}`);
+  const parts = [];
+  if(dt!==0) parts.push(`Trust: ${f(dt)}  → ${trust}`);
+  if(dl!==0) parts.push(`Love:  ${f(dl)}  → ${love}`);
+  if(dj!==0) parts.push(`Jeal:  ${f(dj)}  → ${jealousy}`);
+
+  if(parts.length===0){
+    deltaLogEl.textContent = `Değişim yok.\n(Toplamlar sabit.)`;
+    lastDeltaPillEl.textContent = "0";
+  }else{
+    deltaLogEl.textContent = parts.join("\n");
+    lastDeltaPillEl.textContent = `${dt}/${dl}/${dj}`;
+  }
+}
+
+function applyDelta(obj){
+  const dt = (typeof obj.trust==="number") ? obj.trust : 0;
+  const dj = (typeof obj.jealousy==="number") ? obj.jealousy : 0;
+  const dl = (typeof obj.love==="number") ? obj.love : Math.round(dt * 0.6);
+
+  trust = clamp(trust + dt, 0, 100);
+  jealousy = clamp(jealousy + dj, 0, 100);
+  love = clamp(love + dl, 0, 100);
+
+  updateStatsUI();
+  renderDeltaLog(dt, dl, dj);
+}
+
+/* ================== VN STORY ================== */
+const vnStory = [
+  {
+    speaker:"Anlatıcı",
+    stage:"Crash Cafe • Akşamüstü",
+    text:"Crash’te sıradasın. Kahveni alırken, elinde nadir bulduğun bir sigara paketi var.\nTam o an yanında biri duruyor…",
+    choices:[ { t:"(Devam)", next:1 } ]
+  },
+  {
+    speaker:"Kayra",
+    stage:"Crash Cafe • Akşamüstü",
+    text:"Selam… rahatsız ediyorum ama… elindeki sigara çok nadir duruyor. Bir tane rica edebilir miyim?\n\n(Çok direkt değil. Ses tonu kibar. Göz teması kuruyor.)",
+    choices:[
+      { t:"Olur, buyur. (samimi)", next:2, trust:+8 },
+      { t:"Bir dakika… sen kimsin? ", next:2, trust:+2 },
+      { t:"Normalde vermem ama… hadi.", next:2, trust:+5, jealousy:+1 }
+    ]
+  },
+  {
+    speaker:"Nur",
+    stage:"Crash Cafe • Akşamüstü",
+    text:"(Sigara uzatıyorsun. Bu kadar basit bir şeyin iki insanı tanıştırması komik geliyor.)",
+    choices:[
+      { t:"Adın ne?", next:3, trust:+4 },
+      { t:"Bu sigara gerçekten nadir bu arada.", next:3, trust:+2 },
+      { t:"(Sadece gülümse.)", next:3, trust:+1 }
+    ]
+  },
+  {
+    speaker:"Kayra",
+    stage:"Crash Cafe • Akşamüstü",
+    text:"Ben Kayra. Bu fakültedeyim… seni birkaç kez uzaktan görmüş gibi oldum.\n\n(Çok ‘biliyorum seni’ demiyor, rahatsız etmiyor. Güzel.)",
+    choices:[
+      { t:"Ben de Nur. Aynı fakültedeyiz zaten. Seni derste görmüştüm.", next:4, trust:+7 },
+      { t:"Uzaktan mı? Hmm… ", next:4, trust:+2, jealousy:+1 },
+      { t:"Belki görmüşsündür. ", next:4, trust:+1 }
+    ]
+  },
+  {
+    speaker:"Kayra",
+    stage:"Crash Cafe • Akşamüstü",
+    text:"Crash’te kapalı alan yok ya… dışarıdaki masalar daha rahat. Kahveni aldın mı? İstersen beraber oturalım.",
+    choices:[
+      { t:"Olur. Zaten tek başıma oturacaktım.", next:5, trust:+8 },
+      { t:"Kısa otururum ama.", next:5, trust:+3 },
+      { t:"Tamam… ama kahvemi bitirmeden kaçmam.", next:5, trust:+5 }
+    ]
+  },
+  {
+    speaker:"Anlatıcı",
+    stage:"Crash Cafe • Akşam",
+    text:"Dışarıdaki masaya geçiyorsunuz. Hava hafif serin ama ortam güzel.\nKonu fakülteden, derslerden, saçma hoca triplerinden açılıyor.\n\nKayra’nın konuşması akıcı. Senin alanına saygılı. Flört var ama zorlama değil.",
+    choices:[
+      { t:"Sohbet güzelmiş. (belli et)", next:6, trust:+6 },
+      { t:"Sen hep böyle mi konuşursun?", next:6, trust:+4 },
+      { t:"Ben genelde çok açılmam ama…", next:6, trust:+7 }
+    ]
+  },
+  {
+    speaker:"Kayra",
+    stage:"Crash Cafe • Akşam",
+    text:"Bu arada… seninle konuşmak iyi geldi. Eğer istersen, akşam evdeyken mesaj atarım. Rahatsız etmek istemem.",
+    choices:[
+      { t:"At. Rahatsız olmaz.", next:"TO_PHONE", trust:+10 },
+      { t:"Olur, ama sakin.", next:"TO_PHONE", trust:+6 },
+      { t:"Bakarız.", next:"TO_PHONE", trust:+2 }
+    ]
+  }
+];
+
+function vnRender(){
+  const s = vnStory[vnStep];
+  vnSpeakerEl.textContent = s.speaker;
+  document.getElementById("vnStageTag").textContent = s.stage;
+  vnTextEl.textContent = s.text;
+
+  vnChoicesEl.innerHTML="";
+  s.choices.forEach(ch=>{
+    const btn = document.createElement("button");
+    btn.className="vnChoice";
+    btn.textContent=ch.t;
+    btn.onclick=()=>{
+      applyDelta(ch);
+      if(ch.next==="TO_PHONE") toPhone();
+      else { vnStep = ch.next; vnRender(); }
+    };
+    vnChoicesEl.appendChild(btn);
+  });
+}
+
+/* ================== PHONE STORY (UZUN + ŞART DEVAMI) ================== */
+const phoneStory = [
+  { day:"Bugün", time: 21*60+18,
+    text:"Nur… eve geldin mi? Bugün Crash’teki muhabbet garip şekilde iyi geldi.",
+    choices:[
+      { t:"Geldim. Ben de aynı şeyi düşündüm.", trust:+10, jealousy:0 },
+      { t:"Geldim. Yoruldum ama güzeldi.", trust:+6, jealousy:0 },
+      { t:"Geldim. Bu arada sigara için teşekkür ederim 😄", trust:+8, jealousy:0 }
+    ]
+  },
+  { day:"Bugün", time: 21*60+26,
+    text:"Ben teşekkür ederim. Bu arada… sen genelde insanlarla hemen kaynaşır mısın yoksa seçici misin?",
+    choices:[
+      { t:"Seçiciyim. Ama senin enerjin rahattı.", trust:+10 },
+      { t:"Bazen çok konuşurum bazen hiç.", trust:+6 },
+      { t:"Seçiciyim. O yüzden şaşırtıyorsun.", trust:+8 }
+    ]
+  },
+  { day:"Bugün", time: 21*60+34,
+    text:"Bu hoşuma gitti. Sınırları olan insan daha güven veriyor.\n\n Şey… ben seni tanımak istiyorum ama hızlı da koşmak istemiyorum.",
+    choices:[
+      { t:"Yavaş gidelim, ben de öyle severim.", trust:+10 },
+      { t:"Hızlı koşmayalım ama kaçırmayalım da.", trust:+8 },
+      { t:"Bakalım… ben biraz gözlemlerim.", trust:+4 }
+    ]
+  },
+  { day:"Bugün", time: 21*60+43,
+    text:"Tamam. O zaman küçük bir şey sorayım: Crash’te en sevdiğin kahve ne?",
+    choices:[
+      { t:"Americano. Net, düz.", trust:+6 },
+      { t:"Latte… ama mooduma göre.", trust:+6 },
+      { t:"Tatlı şeyler… bazen de sert.", trust:+8 }
+    ]
+  },
+  { day:"Bugün", time: 21*60+51,
+    text:"Tam senlik cevap: ‘mooduma göre’.\n\nYarın dersin var mı? Belki kısa bir uğrarız Crash’e. Dışarı masaya, 30 dk.",
+    choices:[
+      { t:"Var ama 30 dk ayırırım.", trust:+10 },
+      { t:"Yarın yoğun. Ama başka gün olur.", trust:+7 },
+      { t:"Olur. Ama kahveyi ben ısmarlarım.", trust:+12 }
+    ]
+  },
+  { day:"Bugün", time: 22*60+2,
+    text:"Anlaştık. Bu arada… senin gülüşün Crash’in ışıklarından daha sıcak.\n\n(Flört ediyor. Ama dozunda.)",
+    choices:[
+      { t:"Sen de fena değilsin Kayra 😏", trust:+10, jealousy:+1 },
+      { t:"Ya saçmalama…", trust:+8 },
+      { t:"Bunu not aldım.", trust:+7 }
+    ]
+  },
+  { day:"Bugün", time: 22*60+6,
+    text:"Tamam tamam. Daha fazla rahatsız etmeyeyim. İyi geceler Nur.",
+    choices:[
+      { t:"İyi geceler.", trust:+3 },
+      { t:"İyi geceler… yarın görüşürüz.", trust:+6 },
+      { t:"İyi geceler Kayra.", trust:+5 }
+    ]
+  },
+
+  { meta:"RESET_DAY" },
+
+  { day:"Bugün", time: 9*60+12,
+    text:"Günaydın. Şu an fakülteye gidiyorum. Crash’in önünden geçerken aklıma geldin.",
+    choices:[
+      { t:"Günaydın. Ben de hazırlanıyorum.", trust:+8 },
+      { t:"Günaydın. Dün… güzeldi.", trust:+10 },
+      { t:"Günaydın Kayra.", trust:+6 }
+    ]
+  },
+  { day:"Bugün", time: 9*60+19,
+    text:"Dün seninle konuşurken fark ettim: aynı şeyi sevmesek bile aynı yerden bakıyoruz. Bu nadir.",
+    choices:[
+      { t:"Ben de onu hissettim.", trust:+10 },
+      { t:"Bence de nadir.", trust:+8 },
+      { t:"Bir tık abartıyorsun ama hoşuma gitti.", trust:+9 }
+    ]
+  },
+  { day:"Bugün", time: 12*60+6,
+    text:"Öğlen arası 25 dakikam var. Crash’te dış masaya geçsek? Hani sözümüz vardı ya.",
+    choices:[
+      { t:"Geliyorum. 25 dk tam ideal.", trust:+12 },
+      { t:"Bugün çok sıkışığım. Akşama?", trust:+7 },
+      { t:"Gelirim ama sen bir şartla.", trust:+9, jealousy:+1 }
+    ]
+  },
+  { day:"Bugün", time: 12*60+10,
+    text:"“Şart mı? Söyle.”",
+    choices:[
+      { t:"Bugün kahve benden.", trust:+10 },
+      { t:"Sigara borcun var.", trust:+7, jealousy:+1 },
+      { t:"Şart yok… sadece gel.", trust:+9 }
+    ]
+  },
+
+  { meta:"RESET_DAY" },
+
+  { day:"Bugün", time: 19*60+34,
+    text:"Bugün… yan yana oturunca fark ettim: senin yanında ‘kendim’ gibi olabiliyorum.\n\nBu bende kolay olmuyor.",
+    choices:[
+      { t:"Bunu duymak güzel.", trust:+10 },
+      { t:"Ben de rahatladım.", trust:+9 },
+      { t:"Ben zaten böyleyim. Sen uyum sağladın.", trust:+6 }
+    ]
+  },
+  { day:"Bugün", time: 19*60+41,
+    text:"Sana bir şey söyleyeyim mi… Bugün eve dönerken bir dükkânda küçük bir şey gördüm.\n“Senlik.”",
+    choices:[
+      { t:"Ne gördün?", trust:+6 },
+      { t:"Kayra… tatlılık yapma.", trust:+8 },
+      { t:"Bana hediye mi alıyorsun?", trust:+7 }
+    ]
+  },
+  { day:"Bugün", time: 19*60+46,
+    text:"Henüz hediye değil. ‘Bizim aramızda bir şey’ gibi… küçük bir anahtarlık. \n\n“Üzerinde minik bir kahve kupası var.”",
+    choices:[
+      { t:"Ayyy bu çok tatlı.", trust:+12 },
+      { t:"Anahtarlık mı… aşırı iyi fikir.", trust:+10 },
+      { t:"Ben de sana bir şey yapmak istiyorum.", trust:+11 }
+    ]
+  },
+  { day:"Bugün", time: 19*60+52,
+    text:"Sen bana bir şey yaparsan… aşırı mutlu olurum.\n\n Ama acele etme. Ben en çok ‘düşünülmeyi’ seviyorum.",
+    choices:[
+      { t:"O zaman sana ‘düşünülmüş’ bir hediye yapacağım.", trust:+14 },
+      { t:"Ben zaten düşünüyorum…", trust:+12, jealousy:+1 },
+      { t:"Tamam. Yavaş yavaş.", trust:+10 }
+    ]
+  },
+
+  { meta:"RESET_DAY" },
+
+  { day:"Bugün", time: 11*60+8,
+    text:"Bugün Crash’e uğrayacak mısın? Buluşalım mı?.",
+    choices:[
+      { t:"Uğrarım. Baya özledin sanırım.", trust:+10 },
+      { t:"Tamam ama beni bekletme.", trust:+7 },
+      { t:"Ben de gelemeyebilirim.", trust:-2 }
+    ]
+  },
+  { day:"Bugün", time: 11*60+22,
+    text:"Bu arada… dün birini gördüm yanında konuşurken.\n\n“Arkadaşın mı?”",
+    choices:[
+      { t:"Evet, sınıftan.", trust:+7, jealousy:-1 },
+      { t:"Kıskandın mı?", trust:+5, jealousy:+2 },
+      { t:"Bu konuya girmeyelim.", trust:-6, jealousy:+2 }
+    ]
+  },
+  { day:"Bugün", time: 11*60+29,
+    text:"Benim karakterim böyle… bazen içimde tutuyorum, sonra saçma bir şey soruyorum.\n\nÖzür dilerim.",
+    choices:[
+      { t:"Sorabilirsin. Ama bana güvenmen gerekir.", trust:+12, jealousy:-2 },
+      { t:"Özür kabul.", trust:+6 },
+      { t:"Kıskançlık yorar Kayra.", trust:+3, jealousy:-1 }
+    ]
+  },
+  { day:"Bugün", time: 18*60+44,
+    text:"Sana net bir şey söylemek istiyorum.\n\nBen seni ‘tanımak’ değil… ‘hayatıma almak’ istiyorum.",
+    choices:[
+      { t:"Ben de.", trust:+20 },
+      { t:"Ben bunu duymayı bekliyordum.", trust:+16 },
+      { t:"Biraz korkutuyor ama hoş.", trust:+10 }
+    ]
+  },
+  { day:"Bugün", time: 18*60+52,
+    text:"O zaman… bir şey soracağım.\n\n Benimle sevgili olur musun?",
+    choices:[
+      { t:"Olurum. ❤️", trust:+25, next:"END_GOOD" },
+      { t:"Olurum ama yavaş.", trust:+22, next:"END_GOOD" },
+      { t:"Olurum… ama bir şartım var.", trust:+20, jealousy:+1 }
+    ]
+  },
+
+  /* ŞART DEVAMI */
+  { day:"Bugün", time: 18*60+56,
+    text:"Şartın ne?",
+    choices:[
+      { t:"Bana hiç yalan söyleme bende sana söylemiyim. ve hayatımızda birbirimize hep destek olup çok sevelim.Çoğu ilişkide insanların yaptığı hataları yapmayalım...", trust:+14 },
+      { t:"Beni kıskançlıkla yorma.", trust:+10, jealousy:-2 },
+      { t:"Bana dürüst ol.", trust:+12 }
+    ]
+  },
+
+  { day:"Bugün", time: 19*60+8,
+    text:"Tamam.”\n\n“Şimdi sırada senin hediyen var demiştin…”",
+    choices:[
+      { t:"Evet. Sana özel bir şey.", trust:+10 },
+      { t:"Sürpriz.” 😏", trust:+8 },
+      { t:"Hazır değil ama yapıyorum.", trust:+7 }
+    ]
+  },
+
+  { day:"Bugün", time: 19*60+14,
+    text:"Ne?",
+    choices:[
+      { t:"Sana Crash’teki ilk sigarayı hatırlatan minik bir ‘anı kutusu’ yaptım. 🎁", trust:+18, jealousy:-1 },
+      { t:"Kahve kupası desenli küçük bir bileklik…", trust:+14 },
+      { t:"Sana özel bir playlist. 🎧", trust:+12 }
+    ]
+  },
+
+  { day:"Bugün", time: 19*60+18,
+    text:"…Nur.”\n\nBu kadar düşünmen… beni çok vurdu.”\n\nTamam. Resmi olarak: benim sevgilimsin.”",
+    choices:[
+      { t:"Tamam. 😌", trust:+10 },
+      { t:"Şu an gülümseyip duruyorum.", trust:+9 },
+      { t:"Ben de. ❤️", trust:+12 }
+    ]
+  },
+
+  { day:"Bugün", time: 19*60+24,
+    text:"Son bir şey… bugün Crash’e uğrayalım mı? Ama bu kez ‘sevgili’ olarak.",
+    choices:[
+      { t:"Gidelim.", trust:+8, next:"END_GOOD" },
+      { t:"Gidelim… ama kahve benden.", trust:+10, next:"END_GOOD" },
+      { t:"Gidelim… ama bana bakıp durma.", trust:+7, next:"END_GOOD" }
+    ]
+  },
+];
+
+/* ================== CHAT UI ================== */
+function dayChip(label){
+  if(lastDayChip === label) return;
+  lastDayChip = label;
+  const d = document.createElement("div");
+  d.className="dayChip";
+  d.textContent=label;
+  chatEl.appendChild(d);
+}
+
+function addMsg(who, text, dayLabel, mins){
+  dayChip(dayLabel);
+
+  const div = document.createElement("div");
+  div.className = "msg " + (who==="kayra" ? "kayra" : "nur");
+  div.textContent = text;
+
+  const t = document.createElement("div");
+  t.className="time";
+  t.textContent=fmtHM(mins);
+  div.appendChild(t);
+
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function showTyping(cb){
+  const div = document.createElement("div");
+  div.className="msg kayra typing";
+  div.textContent="Kayra yazıyor...";
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  const prev = statusEl.textContent;
+  statusEl.textContent = "yazıyor...";
+
+  setTimeout(()=>{
+    div.remove();
+    statusEl.textContent = prev;
+    cb();
+  }, 900 + Math.random()*900);
+}
+
+function renderPhoneChoices(scene){
+  choicesEl.innerHTML="";
+  scene.choices.forEach(c=>{
+    const b = document.createElement("button");
+    b.className="choiceBtn";
+    b.textContent=c.t;
+    b.onclick=()=>{
+      addMsg("nur", c.t, scene.day, scene.time+1);
+      applyDelta(c);
+
+      if(c.next==="END_GOOD"){
+        endByScore();
+        return;
+      }
+      phoneStep++;
+      setTimeout(playPhoneStep, 250);
+    };
+    choicesEl.appendChild(b);
+  });
+}
+
+function playPhoneStep(){
+  while(phoneStory[phoneStep] && phoneStory[phoneStep].meta==="RESET_DAY"){
+    lastDayChip = null;
+    phoneStep++;
+  }
+  const scene = phoneStory[phoneStep];
+  if(!scene){ endByScore(); return; }
+
+  showTyping(()=>{
+    addMsg("kayra", scene.text, scene.day, scene.time);
+    renderPhoneChoices(scene);
+  });
+}
+
+function endByScore(){
+  choicesEl.innerHTML="";
+  showTyping(()=>{
+    let ending="";
+    if(trust>=80 && jealousy<=4 && love>=70){
+      ending="❤️ GERÇEK SON:\nCrash’te başlayan şey… hayatımın en iyi tesadüfü oldu.";
+    }else if(trust>=55 && love>=55){
+      ending="🌙 İYİ SON:\nYavaş yavaş ama sağlam… Biz iyi gidiyoruz.";
+    }else{
+      ending="💔 MESAFELİ SON:\nBence biraz zamana ihtiyacımız var… ama başlangıcımız güzeldi.";
+    }
+    addMsg("kayra", ending, "Bugün", 21*60+55);
+  });
+}
+
+/* ================== TRANSITION ================== */
+function toPhone(){
+  vnEl.style.display="none";
+  phoneWrap.style.display="flex";
+
+  chatEl.innerHTML="";
+  choicesEl.innerHTML="";
+  lastDayChip=null;
+  phoneStep=0;
+
+  updateStatsUI();
+  deltaLogEl.textContent = "Telefon başladı. Seçim yapınca değişimler burada görünecek.";
+  lastDeltaPillEl.textContent = "—";
+
+  playPhoneStep();
+}
+
+/* ================== SAVE / LOAD / RESET ================== */
+function saveGame(){
+  localStorage.setItem("crashKayraSave", JSON.stringify({
+    trust, jealousy, love, vnStep, phoneStep,
+    mode: (phoneWrap.style.display==="flex" ? "PHONE" : "VN")
+  }));
+}
+
+function loadGame(){
+  const raw = localStorage.getItem("crashKayraSave");
+  if(!raw) return;
+  const d = JSON.parse(raw);
+
+  trust = d.trust ?? 50;
+  jealousy = d.jealousy ?? 0;
+  love = d.love ?? 40;
+  vnStep = d.vnStep ?? 0;
+  phoneStep = d.phoneStep ?? 0;
+  lastDayChip = null;
+
+  updateStatsUI();
+
+  if(d.mode === "PHONE"){
+    vnEl.style.display="none";
+    phoneWrap.style.display="flex";
+    chatEl.innerHTML="";
+    choicesEl.innerHTML="";
+    deltaLogEl.textContent = "▶ Devam edildi.";
+    lastDeltaPillEl.textContent = "—";
+    playPhoneStep();
+  }else{
+    phoneWrap.style.display="none";
+    vnEl.style.display="flex";
+    vnRender();
+  }
+}
+
+function resetGame(){
+  localStorage.removeItem("crashKayraSave");
+  trust=50; jealousy=0; love=40;
+  vnStep=0; phoneStep=0; lastDayChip=null;
+
+  phoneWrap.style.display="none";
+  vnEl.style.display="flex";
+  updateStatsUI();
+  vnRender();
+}
+
+/* ================== START ================== */
+updateStatsUI();
+vnRender();
+</script>
+
+</body>
+</html>
